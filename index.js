@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const fs = require('fs');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const client = new Discord.Client();
@@ -34,6 +35,15 @@ client.once('ready', () => {
     console.log(`JO Bot is in ${guildCount} servers.`);
 });
 
+// Retrieving and setting up commands dynamically
+client.commands = new Discord.Collection();
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+    const command = require(`./commands/${file}`);
+    client.commands.set(command.name, command);
+}
+
 client.on('guildMemberAdd', (member) => {
     let channel = member.guild.channels.cache.find(channel => channel.id === ga3deh);
     if (channel) {
@@ -43,85 +53,25 @@ client.on('guildMemberAdd', (member) => {
 });
 
 client.on('message', (message) => {
-    if (message.author == client.user) {
-        return;
+    if (message.author.bot || !message.content.toLowerCase().startsWith(prefix)) return;
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
+
+    if (!client.commands.has(commandName)) return;
+
+    const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+    if (!command) return;
+    if (command.args && !args.length) {
+        return message.reply(`Umm, you haven't provided me with ${command.required.join(' and ')}!`);
     }
 
-    if (!message.content.toLowerCase().startsWith(prefix, 0)) {
-        return;
+    try {
+        command.execute(message, args);
     }
-    else {
-        let pieces = message.content.split(' ');
-        let command = pieces[1];
-        let args = pieces[2].trim();
-        if (!command) return;
-        switch (command) {
-            case 'metar':
-                console.log(`Called ${command} command.`);
-                metar(message, args);
-                break;
-
-            case 'help':
-                console.log(`Called ${command} command.`);
-                break;
-
-            case 'rwy':
-                console.log(`Called ${command} command.`);
-                break;
-
-            case 'tw':
-                console.log(`Called ${command} command.`);
-                break;
-
-            default:
-                console.log(`${command}: Not a known command.`);
-                break;
-        }
+    catch (error) {
+        console.error(error);
+        message.reply('Sorry, something went wrong trying to execute your command.');
     }
-})
-
-function help(arg = null) {
-
-}
-
-function metar(message, airport) {
-    if (airport.length != 4) return;
-    let url = `https://avwx.rest/api/metar/${airport}`;
-    fetch(url, {
-        headers: {
-            Authorization: process.env.AVWX_TOKEN
-        }
-    })
-        .then(data => data.json())
-        .then(metar => {
-            let embed = new Discord.MessageEmbed()
-            .setColor('RANDOM')
-            .setTitle(`${airport.toUpperCase()} METAR`)
-            .setTimestamp(new Date().toISOString())
-            .setFooter('Data retrieved from AVWX API', 'https://avwx.rest/')
-            .addField('Decoded', `
-                Report time: ${new Date(metar.time.dt).toUTCString()}
-                Wind speed ${metar.wind_speed.value} ${metar.units.wind_speed} from H${metar.wind_direction.repr} ${metar.wind_variable_direction.length ? 'variable between ' + metar.wind_variable_direction[0].repr + ' and ' + metar.wind_variable_direction[1].repr + ' degrees' : ''} ${metar.wind_gust ? 'gusting at '+metar.wind_gust+' '+metar.units.wind_speed : ''}  
-                ${metar.visibility ? 'Visibility ' + metar.visibility.repr + metar.units.visibility : '\r'}
-                ${metar.wx_codes.length ? metar.wx_codes.map(code=>code.value).join(', ') : '\r'}
-                ${metar.clouds.length ? 'Clouds ' + metar.clouds.map(c=>c.type + ' at ' + (c.altitude * 100) + metar.units.altitude + (metar.clouds.modifier ? ' type '+metar.clouds.modifier : '')).join(', ') : '\r'}
-                Temparature ${metar.temperature.value} ${metar.units.temperature.toUpperCase()}
-                Pressure ${metar.altimeter.value} ${metar.units.altimeter}
-            `.replace(/^\s*$(?:\r\n?|\n)/gm, ''))
-            .addField('Raw', `\`\`\`\n${metar.raw}\`\`\``);
-            message.channel.send(embed);
-        })
-        .catch(reason => {
-            console.log(reason);
-        });
-}
-
-function rwy(airport) {
-
-}
-
-function tailwind(airport, runway) {
-
-}
+});
 
 client.login(process.env.TOKEN);
