@@ -1,6 +1,5 @@
 const Discord = require('discord.js');
 const fs = require('fs');
-const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const client = new Discord.Client();
 const prefix = 'jo ';
@@ -26,7 +25,7 @@ dotenv.config();
 
 client.once('ready', () => {
     console.log('JO Bot is ready!');
-    client.user.setActivity('to 128.500 MHz', { type: 'LISTENING' })
+    client.user.setActivity('128.500 MHz', { type: 'LISTENING' })
     let guildCount = 0;
     client.guilds.cache.forEach(guild => {
         guildCount++;
@@ -44,6 +43,7 @@ for (const file of commandFiles) {
     client.commands.set(command.name, command);
 }
 
+// Send greetings to new members
 client.on('guildMemberAdd', (member) => {
     let channel = member.guild.channels.cache.find(channel => channel.id === ga3deh);
     if (channel) {
@@ -52,12 +52,18 @@ client.on('guildMemberAdd', (member) => {
     console.log(`${member.id} joined ${member.guild.name}.`);
 });
 
+// Parsing commands
 client.on('message', (message) => {
-    if (message.author.bot || !message.content.toLowerCase().startsWith(prefix)) return;
+    if (message.author.bot) return;
+    if (message.mentions.has(client.user)) {
+        message.channel.send(`My prefix is \`${prefix}\``);
+        return;
+    }
+    if(!message.content.toLowerCase().startsWith(prefix)) return;
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
 
-    if (!client.commands.has(commandName)) return;
+    if (!client.commands.has(commandName) && !client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName))) return;
 
     const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
     if (!command) return;
@@ -70,7 +76,7 @@ client.on('message', (message) => {
     }
     catch (error) {
         console.error(error);
-        message.reply('Sorry, something went wrong trying to execute your command.');
+        message.reply('sorry! Something went wrong trying to execute your command.');
     }
 });
 

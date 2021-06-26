@@ -19,7 +19,24 @@ module.exports = {
             .setTitle('JO Bot Help')
             .setFooter('For bug reports, suggestions, or complaints, please proceed DCT QTR.')
             .setTimestamp(new Date().toUTCString())
-            .addField('Commands', data+'```'.replace(/^\s*$(?:\r\n?|\n)/gm, ''));
+            .addField('Commands', data+'```'.replace(/^\s*$(?:\r\n?|\n)/gm, ''))
+            .addField('Details', 'For details about a specific command, type `jo help <command>`.');
+
+            message.channel.send(embed);
+        }
+        else {
+            const commandName = args[0] ? args[0] : null;
+            const command = commands.get(commandName);
+            if (!command) return;
+
+            const embed = new Discord.MessageEmbed()
+            .setColor('RANDOM')
+            .setTitle(`Help for ${command.name.toUpperCase()}`)
+            .setFooter('To see the full list of commands, type `jo help`.')
+            .setTimestamp(new Date().toUTCString())
+            .addField('Usage', command.usage)
+            .addField('Other aliases', command.aliases.map(c => `\`${c}\``).join(', '))
+            .addField('Description', command.description);
 
             message.channel.send(embed);
         }
