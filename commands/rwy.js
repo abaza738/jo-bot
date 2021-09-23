@@ -26,7 +26,7 @@ module.exports = {
     ],
     usage: '`jo rwy <ICAO>`',
     description: 'Guess the active runway based on wind.',
-    async execute (message, args) {
+    async execute (commandName, message, args) {
         let icao = args[0];
         let pref = [];
         if(icao.length != 4) { message.channel.send('That\'s not an ICAO airport.'); return; }

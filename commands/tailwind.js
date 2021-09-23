@@ -8,7 +8,7 @@ module.exports = {
     ],
     usage: '`jo tw <ICAO> <RWY>`',
     description: 'Calculates the tailwind component for a runway.',
-    execute (message, args) {
+    execute (commandName, message, args) {
         
     }
 }

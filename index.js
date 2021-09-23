@@ -72,7 +72,7 @@ client.on('message', (message) => {
     }
 
     try {
-        command.execute(message, args);
+        command.execute(commandName, message, args);
     }
     catch (error) {
         console.error(error);

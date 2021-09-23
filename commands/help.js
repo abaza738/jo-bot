@@ -6,7 +6,7 @@ module.exports = {
     args: false,
     usage: '`jo help [?optional <command name>]`',
     description: 'List available commands.',
-    execute (message, args) {
+    execute (commandName, message, args) {
         let data = '```';
         const { commands } = message.client;
         Array.from(commands).forEach((command, index) => {

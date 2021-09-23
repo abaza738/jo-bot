@@ -20,7 +20,7 @@ module.exports = {
     ],
     usage: '`jo metar <ICAO>`',
     description: 'Retrieve and parse the METAR of airport.',
-    async execute(message, args) {
+    async execute(commandName, message, args) {
         const airport = args[0];
         if (airport.length != 4) return;
 
