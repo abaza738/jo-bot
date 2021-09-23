@@ -64,5 +64,23 @@ More commands can be added as we find more cases to cover. If you have any sugge
             <td ><code>jo play piano</code></td>
             <td>Searches and plays a YouTube video via a query or a URL.</td>
         </tr>
+        <tr>
+            <td ><code>skip</code></td>
+            <td >None</td>
+            <td ><code>jo skip</code></td>
+            <td>Skips the current song, plays next in queue if any.</td>
+        </tr>
+        <tr>
+            <td ><code>stop</code></td>
+            <td >None</td>
+            <td ><code>jo stop</code></td>
+            <td>Clears current song queue and exits voice channel.</td>
+        </tr>
+        <tr>
+            <td ><code>queue</code></td>
+            <td >None</td>
+            <td ><code>jo queue</code></td>
+            <td>Lists songs in the queue.</td>
+        </tr>
     </tbody>
 </table>
