@@ -1,7 +1,9 @@
 const Discord = require('discord.js');
 const ytSearch = require('yt-search');
 const ytdl = require('ytdl-core');
+const ytpl = require('ytpl');
 const moment = require('moment');
+const paginator = require('discord.js-pagination');
 const queue = new Map();
 const avatarURL = 'https://cdn.discordapp.com/avatars';
 
@@ -27,10 +29,16 @@ module.exports = {
 
         if (commandName === 'play' || commandName === 'p') {
             if (!args.length) return message.channel.send('Yo, send me something to lookup!');
-            let songs = {};
-            if (ytdl.validateURL(args[0])) {
-                const info = await ytdl.getInfo(args[0]);
-                song = { title: info.videoDetails.title, url: info.videoDetails.video_url, length: +info.videoDetails.lengthSeconds }
+            let songs = [];
+            if (args[0].match(/^https:\/\//)) {
+                if (args[0].split('list=')[1]) {
+                    const playlist = await ytpl(args[0].split('list=')[1]);
+                    songs = playlist.items.map( (item) => { return {title: item.title, url: item.url, length: item.durationSec} });
+                }
+                else {
+                    const info = await ytdl.getInfo(args[0]);
+                    songs.push({ title: info.videoDetails.title, url: info.videoDetails.video_url, length: +info.videoDetails.lengthSeconds });
+                }
             }
             else {
                 const videoFinder = async (query) => {
@@ -39,7 +47,7 @@ module.exports = {
                 }
                 const video = await videoFinder(args.join(' '));
                 if (video) {
-                    song = { title: video.title, url: video.url, length: video.seconds }
+                    songs.push({ title: video.title, url: video.url, length: video.seconds });
                     param = video.url;
                     thingy = video.title;
                 }
@@ -53,7 +61,7 @@ module.exports = {
                     songs: []
                 }
                 queue.set(message.guild.id, qConstructor);
-                qConstructor.songs.push(song);
+                qConstructor.songs.push.apply(qConstructor.songs, songs);
 
                 try {
                     const connection = await channel.join();
@@ -67,8 +75,8 @@ module.exports = {
                 }
             }
             else {
-                const index = serverQueue.songs.push(song);
-                return message.channel.send(`**${song.title}** has been added to the queue in position ${index} :notes:`);
+                serverQueue.songs.push.apply(serverQueue.songs, songs);
+                return message.channel.send(`**${songs.length == 1 ? songs[0].title + '** has' : songs.length + '** songs have'} been added to the queue :notes:`);
             }
         }
 
@@ -139,15 +147,26 @@ const stopSong = (message, serverQ) => {
  */
 const printQueue = (message, serverQ) => {
     if (!message.member.voice.channel) return message.channel.send('Ye kidding me, right?');
-    let msg = '';
+    let msg = [];
+    let list = [];
+    let embeds = [];
     serverQ.songs.forEach((song, index) => {
-        msg += `${index + 1}. [${song.title}](${song.url}) - **[${moment.utc(song.length * 1000).format('HH:mm:ss')}]**\n`
+        msg.push({title: `${index + 1}. ${song.title}`, body: `[Link](${song.url}) - [${moment.utc(song.length * 1000).format('HH:mm:ss')}]`})
     });
-    let embed = new Discord.MessageEmbed()
-        .setColor('RANDOM')
-        .setTitle(`Queue for ${message.guild.name}`)
-        .setTimestamp(new Date().toISOString())
-        .setFooter(`${serverQ.songs.length} songs in queue | ${moment.utc(serverQ.songs.reduce((total, song) => { return total + song.length }, 0) * 1000).format('HH:mm:ss')} total time.`, `${avatarURL}/${message.member.user.id}/${message.member.user.avatar}`)
-        .addField('__Queue__', msg);
-    message.channel.send(embed);
+    for (let i = 0; i < msg.length; i+=10) {
+        list.push(msg.slice(i, i+10));
+    }
+    list.forEach( (group) => {
+        let embed = new Discord.MessageEmbed()
+            .setColor('RANDOM')
+            .setTitle(`Queue for ${message.guild.name}`)
+            .setTimestamp(new Date().toISOString())
+            .setAuthor(message.member.displayName, `${avatarURL}/${message.member.user.id}/${message.member.user.avatar}`)
+            .setDescription(`${serverQ.songs.length} songs in queue | ${moment.utc(serverQ.songs.reduce((total, song) => { return total + song.length }, 0) * 1000).format('HH:mm:ss')} total time.`);
+            group.forEach(song => {
+                embed.addField(song.title, song.body);
+            });
+            embeds.push(embed)
+        });
+        paginator(message, embeds);
 }

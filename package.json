@@ -2,11 +2,38 @@
   "dependencies": {
     "@discordjs/opus": "^0.6.0",
     "discord.js": "^12.5.3",
+    "discord.js-pagination": "^1.0.3",
     "dotenv": "^10.0.0",
     "ffmpeg-static": "^4.4.0",
     "moment": "^2.29.1",
     "node-fetch": "^2.6.1",
+    "node-opus": "^0.3.3",
     "yt-search": "^2.10.1",
-    "ytdl-core": "^4.9.1"
-  }
+    "ytdl-core": "^4.9.1",
+    "ytpl": "^2.2.3"
+  },
+  "name": "jo-bot",
+  "description": "A simple Discord bot using `Discord.js` for our aviation server.",
+  "version": "2.1.5",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abaza738/jo-bot.git"
+  },
+  "keywords": [
+    "jordan",
+    "aviators",
+    "aviation",
+    "bot"
+  ],
+  "author": "Maher Abaza",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abaza738/jo-bot/issues"
+  },
+  "homepage": "https://github.com/abaza738/jo-bot#readme"
 }
